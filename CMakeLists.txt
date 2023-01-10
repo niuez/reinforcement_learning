@@ -7,5 +7,6 @@ include_directories(${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
 include_directories(.)
 
 add_subdirectory(k-armed-bandit)
+add_subdirectory(jacks_rental_car)
  
  
