@@ -25,46 +25,59 @@ void policy_iteration(std::array<Store, 2> stores) {
   std::vector<Reward> value(state_size, 0);
   std::vector<int> pi(state_size, 0);
 
+  std::array<std::vector<std::vector<double>>, 2> stores_coef;
+  for(int i = 0; i < stores.size(); i++) {
+    auto& coef = stores_coef[i];
+    coef.resize(stores[i].max_cars + 1, std::vector<double>(stores[i].max_cars + 1, 0));
+    for(int v = 0; v <= stores[i].max_cars; v++) {
+      double d_sum = 0;
+      for(int d = 0; d <= v; d++) {
+        double p = d == v ? 1 - d_sum : poisson(stores[i].demand_mean, d);
+        d_sum += p;
+        double s_sum = 0;
+        for(int s = 0; v - d + s <= stores[i].max_cars; s++) {
+          double q = v - d + s == stores[i].max_cars ? 1 - s_sum : poisson(stores[i].supply_mean, s);
+          s_sum += q;
+          coef[v][v - d + s] += p * q;
+        }
+      }
+    }
+  }
+
+  std::array<std::vector<double>, 2> rent_reward;
+  for(int i = 0; i < stores.size(); i++) {
+    auto& reward = rent_reward[i];
+    reward.resize(stores[i].max_cars + 1, 0);
+    for(int v = 0; v <= stores[i].max_cars; v++) {
+      double d_sum = 0;
+      for(int d = 0; d <= v; d++) {
+        double p = d == v ? 1 - d_sum : poisson(stores[i].demand_mean, d);
+        d_sum += p;
+        reward[v] += p * d * 10;
+      }
+    }
+  }
+
+
   auto calc_sigma = [&](int i, int j, int action) {
     Reward sigma = 0;
     Reward move_reward = (action <= -1 ? -action + 1 : std::abs(action)) * -2;
     i = std::min(stores[0].max_cars, i + action);
     j = std::min(stores[1].max_cars, j - action);
-
     Reward over_reward = (i > 10 ? -4 : 0) + (j > 10 ? -4 : 0);
 
-    double dem_i = 0;
-    for(int di = 0; di <= i; di++) {
-      double pi = di == i ? 1 - dem_i : poisson(stores[0].demand_mean, di);
-      dem_i += pi;
-
-      double dem_j = 0;
-      for(int dj = 0; dj <= j; dj++) {
-        double pj = dj == j ? 1 - dem_j : poisson(stores[1].demand_mean, dj);
-        dem_j += pj;
-
-        double sup_i = 0;
-        for(int si = 0; si + i - di <= stores[0].max_cars; si++) {
-          double qi = si + i - di == stores[0].max_cars ? 1 - sup_i : poisson(stores[0].supply_mean, si);
-          sup_i += qi;
-
-          double sup_j = 0;
-          for(int sj = 0; sj + j - dj <= stores[1].max_cars; sj++) {
-            double qj = sj + j - dj == stores[1].max_cars ? 1 - sup_j : poisson(stores[1].supply_mean, sj);
-            sup_j += qj;
-
-            Reward rent_reward = (di + dj) * 10;
-            Reward R = move_reward + rent_reward + over_reward;
-            double P = pi * pj * qi * qj;
-            int next_i = si + i - di;
-            int next_j = sj + j - dj;
-            sigma += P * (R + Gamma * value[to_int(next_i, next_j)]);
-          }
-        }
+    sigma += move_reward;
+    sigma += over_reward;
+    sigma += rent_reward[0][i];
+    sigma += rent_reward[1][j];
+    for(int x = 0; x <= stores[0].max_cars; x++) {
+      for(int y = 0; y <= stores[1].max_cars; y++) {
+        sigma += stores_coef[0][i][x] * stores_coef[1][j][y] * Gamma * value[to_int(x, y)];
       }
     }
     return sigma;
   };
+
 
 
   for(int q = 0; q < Iteration; q++) {
