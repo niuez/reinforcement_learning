@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <ostream>
+#include <algorithm>
 
 struct Bandit {
   double mean;
