@@ -8,5 +8,4 @@ include_directories(.)
 
 add_subdirectory(k-armed-bandit)
 add_subdirectory(jacks_rental_car)
- 
- 
+add_subdirectory(gambler)
