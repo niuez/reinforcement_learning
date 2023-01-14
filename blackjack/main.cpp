@@ -6,8 +6,11 @@
 #include <cassert>
 #include <iomanip>
 
+#include "matplotlibcpp.hpp"
+namespace plt = matplotlibcpp;
+
 void on_policy_eps_soft(const double eps) {
-  constexpr int Iteration = 10000000;
+  constexpr int Iteration = 1000000;
   constexpr double Gamma = 1;
   std::mt19937 mt(786);
   std::unordered_map<State, int> max_pi;
@@ -84,6 +87,7 @@ void on_policy_eps_soft(const double eps) {
     }
 
     if(q % 50000 == 0) {
+      std::cerr << q << " " << Iteration << std::endl;
       std::map<std::tuple<int, int, int>, int> pi;
       for(auto& [s, a]: max_pi) {
         int score = s.player.score();
@@ -104,7 +108,7 @@ void on_policy_eps_soft(const double eps) {
       }
 
       std::map<std::tuple<int, int, int, int>, double> q;
-      for(auto& [s, a]: N) {
+      for(auto& [s, a]: Q) {
         int score = s.player.score();
         int dealer = s.dealer.sum + s.dealer.usable_ace;
         bool ace = s.player.usable_ace;
@@ -118,16 +122,60 @@ void on_policy_eps_soft(const double eps) {
         for(int i = 11; i <= 21; i++) {
           std::cerr << i << " : ";
           for(int d = 1; d <= 10; d++) {
+            /*
             std::cerr << std::setprecision(1) << std::scientific << std::setw(8);
             std::cerr << q[{ i, d, ace, 0 }] << "/";
             std::cerr << std::setprecision(1) << std::scientific << std::setw(8);
             std::cerr << q[{i, d, ace, 1}] << " ";
+            */
+            std::cerr << std::setprecision(1) << std::scientific << std::setw(8) << q[{i, d, ace, 1}] - q[{i, d, ace, 0}] << " ";
           }
           std::cerr << std::endl;
         }
       }
     }
   }
+
+  {
+    std::map<std::tuple<int, int, int, int>, double> q;
+    for(auto& [s, a]: Q) {
+      int score = s.player.score();
+      int dealer = s.dealer.sum + s.dealer.usable_ace;
+      bool ace = s.player.usable_ace;
+      q[{ score, dealer, ace, 0 }] = a[0];
+      q[{ score, dealer, ace, 1 }] = a[1];
+    }
+
+
+    std::vector<std::vector<double>> x, y, z;
+    for(int ace = 0; ace <= 1; ace++) {
+      plt::subplot(1, 2, ace + 1);
+      std::cerr << "ace = " << ace << std::endl;
+      for(int i = 11; i <= 21; i++) {
+        std::cerr << i << " : ";
+        std::vector<double> ax, ay, az;
+        for(int d = 1; d <= 10; d++) {
+          /*
+             std::cerr << std::setprecision(1) << std::scientific << std::setw(8);
+             std::cerr << q[{ i, d, ace, 0 }] << "/";
+             std::cerr << std::setprecision(1) << std::scientific << std::setw(8);
+             std::cerr << q[{i, d, ace, 1}] << " ";
+             */
+          std::cerr << std::setprecision(1) << std::scientific << std::setw(8) << q[{i, d, ace, 1}] - q[{i, d, ace, 0}] << " ";
+          ax.push_back(i);
+          ay.push_back(d);
+          az.push_back(q[{i, d, ace, 1}] - q[{i, d, ace, 0}]);
+        }
+        x.push_back(std::move(ax));
+        y.push_back(std::move(ay));
+        z.push_back(std::move(az));
+        std::cerr << std::endl;
+      }
+      plt::plot_surface(x, y, z);
+    }
+    plt::show();
+  }
+
 }
 
 int main() {
