@@ -66,6 +66,7 @@ struct Hand {
 
 int judge(int player, int dealer) {
   if(player == 0) return -1;
+  else if(player == dealer) return 0;
   else if(player < dealer) return -1;
   else return 1;
 }
