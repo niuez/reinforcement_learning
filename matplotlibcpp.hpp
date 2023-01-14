@@ -1440,6 +1440,9 @@ bool quiver(const std::vector<NumericX>& x, const std::vector<NumericY>& y, cons
     {
         PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
     }
+    PyDict_SetItemString(kwargs, "scale", PyFloat_FromDouble(1));
+    PyDict_SetItemString(kwargs, "scale_units", PyString_FromString("xy"));
+    PyDict_SetItemString(kwargs, "headwidth", PyFloat_FromDouble(1.5));
 
     PyObject* res = PyObject_Call(
             detail::_interpreter::get().s_python_function_quiver, plot_args, kwargs);
