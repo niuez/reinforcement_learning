@@ -10,7 +10,7 @@
 namespace plt = matplotlibcpp;
 
 void on_policy_eps_soft(const double eps) {
-  constexpr int Iteration = 1000000;
+  constexpr int Iteration = 10000000;
   constexpr double Gamma = 1;
   std::mt19937 mt(786);
   std::unordered_map<State, int> max_pi;
@@ -147,9 +147,9 @@ void on_policy_eps_soft(const double eps) {
     }
 
 
-    std::vector<std::vector<double>> x, y, z;
     for(int ace = 0; ace <= 1; ace++) {
-      plt::subplot(1, 2, ace + 1);
+      std::vector<std::vector<double>> x, y, z;
+      std::vector<double> X, Y, Z;
       std::cerr << "ace = " << ace << std::endl;
       for(int i = 11; i <= 21; i++) {
         std::cerr << i << " : ";
@@ -165,21 +165,33 @@ void on_policy_eps_soft(const double eps) {
           ax.push_back(i);
           ay.push_back(d);
           az.push_back(q[{i, d, ace, 1}] - q[{i, d, ace, 0}]);
+          X.push_back(i);
+          Y.push_back(d);
+          Z.push_back(q[{i, d, ace, 1}] - q[{i, d, ace, 0}]);
         }
         x.push_back(std::move(ax));
         y.push_back(std::move(ay));
         z.push_back(std::move(az));
         std::cerr << std::endl;
       }
-      plt::plot_surface(x, y, z);
+      double M = 0;
+      for(auto z: Z) {
+        M = std::max(std::abs(z), M);
+      }
+      for(auto& z: Z) {
+        z /= M;
+      }
+      plt::scatter_colored(Y, X, Z, 10.0, { { "vmin", "-1" }, {"vmax", "1"},  });
+      //plt::plot_surface(x, y, z);
+      plt::show();
+      plt::clf();
     }
-    plt::show();
   }
 
 }
 
 int main() {
-  on_policy_eps_soft(0.2);
+  on_policy_eps_soft(0.1);
 }
 
 /*

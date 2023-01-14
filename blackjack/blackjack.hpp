@@ -65,7 +65,7 @@ struct Hand {
 };
 
 int judge(int player, int dealer) {
-  if(player == dealer) return 0;
+  if(player == 0) return -1;
   else if(player < dealer) return -1;
   else return 1;
 }
@@ -73,6 +73,7 @@ int judge(int player, int dealer) {
 struct State {
   Hand dealer;
   Hand player;
+  std::vector<int> deck;
 
   bool operator==(const State& state) const {
     return dealer == state.dealer && player == state.player;
@@ -80,6 +81,12 @@ struct State {
 
   template<class URGB>
   void init(URGB& g) {
+    for(int i = 1; i <= 13; i++) {
+      for(int j = 0; j < 4; j++) {
+        deck.push_back(i);
+      }
+    }
+    std::shuffle(deck.begin(), deck.end(), g);
     dealer.add_card(take_card(g));
     player.add_card(take_card(g));
     player.add_card(take_card(g));
@@ -94,13 +101,14 @@ struct State {
   }
 
   template<class URGB>
-  int take_card(URGB& g) const {
-    static std::uniform_int_distribution<int> card_dist(1, 13);
-    return std::min(card_dist(g), 10);
+  int take_card(URGB& g) {
+    int card = deck.back();
+    deck.pop_back();
+    return std::min(card, 10);
   }
 
   template<class URGB>
-  int dealer_score(URGB& g) const {
+  int dealer_score(URGB& g) {
     auto now = dealer;
     while(now.score() < 17 && !now.is_bust) {
       now.add_card(take_card(g));

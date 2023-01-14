@@ -1047,6 +1047,8 @@ template<typename NumericX, typename NumericY, typename NumericColors>
         {
             PyDict_SetItemString(kwargs, it.first.c_str(), PyString_FromString(it.second.c_str()));
         }
+        PyObject* cmname  = PyString_FromString("matplotlib.cm");
+        PyDict_SetItemString(kwargs, "cmap", PyObject_GetAttrString(PyImport_Import(cmname), "seismic"));
 
         PyObject* plot_args = PyTuple_New(2);
         PyTuple_SetItem(plot_args, 0, xarray);
