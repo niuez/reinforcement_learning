@@ -49,8 +49,9 @@ void Sarsa0_TD(const GridWindWorld& world) {
   std::vector<double> loops;
   double action_cnt = 0;
   for(int q = 0; q < Iteration; q++) {
+    /*
+    // Sarsa method
     State state = world.init_state();
-    //State state = init_state();
     int action = action_select(state);
     while(!world.is_goal(state)) {
       action_cnt++;
@@ -62,6 +63,39 @@ void Sarsa0_TD(const GridWindWorld& world) {
       state = std::move(next_state);
       action = next_action;
     }
+    */
+
+    // expected Sarsa method
+    State state = world.init_state();
+    int action = action_select(state);
+    while(!world.is_goal(state)) {
+      action_cnt++;
+      State next_state = state;
+      double R = world.action(next_state, action);
+      int next_action = action_select(next_state);
+      double sum = 0;
+      for(int i = 0; i < 4; i++) {
+        sum += (i == max_pi[next_state] ? 1 - eps + eps / 4 : eps / 4) * Q[next_state][i];
+      }
+      Q[state][action] += alpha * (R + Gamma * sum - Q[state][action]);
+      max_pi[state] = std::max_element(Q[state].begin(), Q[state].end()) - Q[state].begin();
+      state = std::move(next_state);
+      action = next_action;
+    }
+
+    /*
+    // Q-learning
+    State state = world.init_state();
+    while(!world.is_goal(state)) {
+      action_cnt++;
+      int action = action_select(state);
+      State next_state = state;
+      double R = world.action(next_state, action);
+      Q[state][action] += alpha * (R + Gamma * Q[next_state][max_pi[next_state]] - Q[state][action]);
+      max_pi[state] = std::max_element(Q[state].begin(), Q[state].end()) - Q[state].begin();
+      state = std::move(next_state);
+    }
+    */
 
     assert(world.is_goal(state));
 
