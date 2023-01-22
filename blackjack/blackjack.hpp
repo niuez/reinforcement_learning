@@ -127,7 +127,14 @@ struct State {
     }
     else {
       player.add_card(take_card(g));
-      return { false, 0 };
+      if(is_bust()) {
+        int p = player.score();
+        int d = dealer_score(g);
+        return { true, judge(p, d) } ;
+      }
+      else {
+        return { false, 0 };
+      }
     }
   }
 };
