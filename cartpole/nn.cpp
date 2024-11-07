@@ -59,19 +59,13 @@ struct NN {
       }
     }
     {
-      int min_i = std::min_element(value[3].begin(), value[3].end()) - value[3].begin();
-      if(value[3][1 - min_i] - value[3][min_i] >= 30) {
-        value[4][min_i] = 0;
-        value[4][1 - min_i] = 1;
+      int max_v = *std::max_element(value[3].begin(), value[3].end());
+      value_type sigma = 0;
+      for(int i = 0; i < value[3].size(); i++) {
+        sigma += std::exp(value[3][i] - max_v);
       }
-      else {
-        float sigma = 0;
-        for(int i = 0; i < value[3].size(); i++) {
-          sigma += std::exp(value[3][i] - value[3][min_i]);
-        }
-        for(int i = 0; i < value[3].size(); i++) {
-          value[4][i] = std::exp(value[3][i] - value[3][min_i]) / sigma;
-        }
+      for(int i = 0; i < value[3].size(); i++) {
+        value[4][i] = std::exp(value[3][i] - max_v) / sigma;
       }
     }
   }

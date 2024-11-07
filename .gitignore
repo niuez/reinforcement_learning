@@ -6,3 +6,4 @@ build
 *.lib
 *.pdb
 *.out.*
+.DS_Store
